@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NorthVault — Personal Savings</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0b1e3d;
+    --navy-mid: #122649;
+    --navy-light: #1a3560;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-pale: #f5ecd4;
+    --cream: #fdf8f0;
+    --white: #ffffff;
+    --text-dark: #0b1e3d;
+    --text-mid: #4a5e7a;
+    --text-light: #8a9bb5;
+    --success: #1e6b4a;
+    --success-bg: #d4efe3;
+    --border: #dde5f0;
+    --shadow-sm: 0 2px 8px rgba(11,30,61,0.08);
+    --shadow-md: 0 8px 32px rgba(11,30,61,0.14);
+    --shadow-lg: 0 24px 64px rgba(11,30,61,0.18);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--text-dark); min-height:100vh; overflow-x:hidden; }
+
+  .topbar { background:var(--navy); color:var(--text-light); font-size:0.72rem; letter-spacing:0.06em; display:flex; justify-content:space-between; align-items:center; padding:0.45rem 2.5rem; font-weight:500; }
+  .topbar span { display:flex; align-items:center; gap:0.4rem; }
+  .topbar .dot { width:6px; height:6px; background:#2ecf8a; border-radius:50%; animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  header { background:var(--navy); padding:0 2.5rem; display:flex; align-items:center; justify-content:space-between; height:72px; border-bottom:1px solid rgba(201,168,76,0.25); position:sticky; top:0; z-index:100; }
+  .logo { display:flex; align-items:center; gap:0.75rem; }
+  .logo-mark { width:36px; height:36px; background:linear-gradient(135deg,var(--gold),var(--gold-light)); border-radius:8px; display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700; color:var(--navy); letter-spacing:-1px; box-shadow:0 2px 12px rgba(201,168,76,0.35); }
+  .logo-text { font-family:'Playfair Display',serif; font-size:1.35rem; font-weight:700; color:var(--white); letter-spacing:0.02em; }
+  .logo-text span { color:var(--gold); }
+  nav { display:flex; gap:2rem; align-items:center; }
+  nav a { color:rgba(255,255,255,0.6); text-decoration:none; font-size:0.85rem; font-weight:500; letter-spacing:0.03em; transition:color 0.2s; }
+  nav a:hover { color:var(--white); }
+  nav a.active { color:var(--gold); }
+  .header-right { display:flex; align-items:center; gap:1.2rem; }
+  .avatar { width:36px; height:36px; background:linear-gradient(135deg,var(--gold),var(--gold-light)); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:700; color:var(--navy); }
+  .acct-num { font-family:'DM Mono',monospace; font-size:0.75rem; color:rgba(255,255,255,0.45); letter-spacing:0.1em; }
+
+  /* PROMO BANNER */
+  .promo-banner { background:linear-gradient(90deg,#0b2a1a 0%,#0d3320 50%,#0b2a1a 100%); border-bottom:1px solid rgba(46,207,138,0.3); padding:0.65rem 2.5rem; display:none; align-items:center; justify-content:space-between; gap:1rem; }
+  .promo-banner.active { display:flex; animation:bannerIn 0.4s ease; }
+  @keyframes bannerIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+  .promo-banner-left { display:flex; align-items:center; gap:0.75rem; }
+  .promo-pip { width:8px; height:8px; background:#2ecf8a; border-radius:50%; animation:pulse 1.5s infinite; flex-shrink:0; }
+  .promo-banner-text { font-size:0.82rem; color:#a0f5d0; font-weight:500; }
+  .promo-banner-text strong { color:#2ecf8a; font-family:'DM Mono',monospace; }
+  .promo-banner-tag { font-size:0.68rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; background:rgba(46,207,138,0.2); border:1px solid rgba(46,207,138,0.4); color:#2ecf8a; padding:0.25rem 0.7rem; border-radius:20px; white-space:nowrap; }
+
+  /* HERO */
+  .hero-band { background:linear-gradient(135deg,var(--navy) 0%,var(--navy-light) 100%); padding:3rem 2.5rem 3.5rem; position:relative; overflow:hidden; }
+  .hero-band::before { content:''; position:absolute; top:-80px; right:-80px; width:320px; height:320px; background:radial-gradient(circle,rgba(201,168,76,0.12) 0%,transparent 70%); border-radius:50%; }
+  .hero-band::after { content:''; position:absolute; bottom:-40px; left:30%; width:200px; height:200px; background:radial-gradient(circle,rgba(201,168,76,0.07) 0%,transparent 70%); border-radius:50%; }
+  .hero-inner { max-width:1100px; margin:0 auto; position:relative; z-index:1; }
+  .hero-label { font-size:0.72rem; font-weight:600; letter-spacing:0.18em; color:var(--gold); text-transform:uppercase; margin-bottom:0.6rem; }
+  .hero-title { font-family:'Playfair Display',serif; font-size:2.6rem; font-weight:700; color:var(--white); line-height:1.15; margin-bottom:1.8rem; }
+  .hero-title em { font-style:italic; color:var(--gold-light); }
+  .hero-stats { display:flex; gap:3rem; flex-wrap:wrap; }
+  .hero-stat .label { font-size:0.72rem; font-weight:500; letter-spacing:0.1em; color:rgba(255,255,255,0.45); text-transform:uppercase; margin-bottom:0.25rem; }
+  .hero-stat .value { font-family:'Playfair Display',serif; font-size:1.55rem; font-weight:700; color:var(--white); }
+  .hero-stat .value.gold { color:var(--gold-light); }
+  .hero-stat .sub { font-size:0.72rem; color:rgba(255,255,255,0.35); margin-top:0.1rem; font-family:'DM Mono',monospace; }
+
+  .page { max-width:1100px; margin:0 auto; padding:2.5rem 2.5rem 4rem; display:grid; grid-template-columns:1fr 380px; gap:2rem; }
+
+  .card { background:var(--white); border-radius:16px; border:1px solid var(--border); box-shadow:var(--shadow-sm); overflow:hidden; }
+  .card-header { padding:1.4rem 1.8rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .card-header h2 { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:600; color:var(--text-dark); }
+  .badge { font-size:0.7rem; font-weight:600; letter-spacing:0.08em; padding:0.25rem 0.65rem; border-radius:20px; text-transform:uppercase; }
+  .badge-gold { background:var(--gold-pale); color:#8a6a00; }
+  .badge-green { background:var(--success-bg); color:var(--success); }
+  .card-body { padding:1.8rem; }
+
+  .input-group { margin-bottom:1.4rem; }
+  .input-label { font-size:0.75rem; font-weight:600; letter-spacing:0.08em; color:var(--text-mid); text-transform:uppercase; margin-bottom:0.5rem; display:block; }
+  .input-wrap { display:flex; align-items:center; border:1.5px solid var(--border); border-radius:10px; overflow:hidden; background:#fafbfd; transition:border-color 0.2s,box-shadow 0.2s; }
+  .input-wrap:focus-within { border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,168,76,0.15); background:var(--white); }
+  .input-prefix { padding:0 1rem; font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:600; color:var(--text-mid); border-right:1.5px solid var(--border); background:#f4f6fa; height:52px; display:flex; align-items:center; user-select:none; }
+  .amount-input { flex:1; border:none; background:transparent; font-family:'DM Mono',monospace; font-size:1.2rem; font-weight:500; color:var(--text-dark); padding:0 1rem; height:52px; outline:none; letter-spacing:0.05em; }
+  .amount-input::placeholder { color:#c5cdd9; }
+
+  .rate-preview { border-radius:10px; padding:1rem 1.2rem; margin-bottom:1.4rem; display:flex; align-items:center; gap:0.8rem; border:1px solid #dde5f0; transition:all 0.4s; background:linear-gradient(135deg,#f0f4fa,#e8edf7); }
+  .rate-icon { width:36px; height:36px; background:linear-gradient(135deg,var(--gold),var(--gold-light)); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; }
+  .rate-text { font-size:0.82rem; color:var(--text-mid); line-height:1.5; }
+  .rate-text strong { color:var(--text-dark); font-weight:600; }
+
+  .btn-deposit { width:100%; height:54px; background:linear-gradient(135deg,var(--navy) 0%,var(--navy-light) 100%); color:var(--white); border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:600; letter-spacing:0.06em; cursor:pointer; transition:all 0.25s; display:flex; align-items:center; justify-content:center; gap:0.6rem; text-transform:uppercase; position:relative; overflow:hidden; }
+  .btn-deposit::after { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(201,168,76,0.15),transparent); opacity:0; transition:opacity 0.25s; }
+  .btn-deposit:hover::after { opacity:1; }
+  .btn-deposit:hover { transform:translateY(-1px); box-shadow:0 8px 24px rgba(11,30,61,0.28); }
+  .btn-deposit:active { transform:translateY(0); }
+  .disclaimer { font-size:0.7rem; color:var(--text-light); margin-top:1rem; text-align:center; line-height:1.5; }
+  .disclaimer a { color:var(--gold); text-decoration:none; }
+
+  .savings-display { text-align:center; padding:2rem 1.8rem 1.5rem; }
+  .savings-label { font-size:0.72rem; font-weight:600; letter-spacing:0.15em; color:var(--text-light); text-transform:uppercase; margin-bottom:0.5rem; }
+  .savings-total { font-family:'Playfair Display',serif; font-size:3.2rem; font-weight:700; color:var(--text-dark); letter-spacing:-0.02em; line-height:1; margin-bottom:0.5rem; }
+  .savings-total .cents { font-size:1.8rem; color:var(--text-mid); }
+  .savings-progress-wrap { margin:1.2rem 1.8rem; }
+  .progress-labels { display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-light); margin-bottom:0.4rem; font-weight:500; }
+  .progress-bar-bg { height:6px; background:#eef1f7; border-radius:999px; overflow:hidden; }
+  .progress-bar-fill { height:100%; background:linear-gradient(90deg,var(--gold),var(--gold-light)); border-radius:999px; transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1); width:0%; }
+  .deposits-count { text-align:center; font-size:0.78rem; color:var(--text-light); padding:0.8rem 1.8rem 1.4rem; border-top:1px solid var(--border); margin-top:0.5rem; }
+  .deposits-count strong { color:var(--text-dark); font-weight:600; }
+
+  .activity-table { width:100%; border-collapse:collapse; }
+  .activity-table th { font-size:0.68rem; font-weight:600; letter-spacing:0.1em; color:var(--text-light); text-transform:uppercase; padding:0 1.8rem 0.8rem; text-align:left; }
+  .activity-table th:last-child { text-align:right; }
+  .activity-table tbody tr { border-top:1px solid var(--border); transition:background 0.15s; animation:rowIn 0.35s ease both; }
+  @keyframes rowIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  .activity-table tbody tr:hover { background:#fafbfd; }
+  .activity-table td { padding:1rem 1.8rem; font-size:0.84rem; }
+  .activity-table td:last-child { text-align:right; }
+  .tx-icon { width:32px; height:32px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; font-size:0.85rem; margin-right:0.6rem; flex-shrink:0; }
+  .tx-deposit-icon { background:var(--success-bg); }
+  .tx-promo-icon { background:#fff3cd; }
+  .tx-info { display:flex; align-items:center; }
+  .tx-name { font-weight:500; color:var(--text-dark); display:block; line-height:1.3; }
+  .tx-sub { font-size:0.72rem; color:var(--text-light); font-family:'DM Mono',monospace; }
+  .tx-amount-saved { font-family:'DM Mono',monospace; font-weight:600; color:var(--success); font-size:0.88rem; }
+  .tx-amount-promo { font-family:'DM Mono',monospace; font-weight:600; color:#b8860b; font-size:0.88rem; }
+  .tx-rate-note { font-size:0.7rem; color:var(--text-light); font-family:'DM Mono',monospace; }
+  .tx-original { font-family:'DM Mono',monospace; font-size:0.82rem; color:var(--text-mid); }
+  .lock-badge { display:inline-block; font-size:0.62rem; font-weight:700; letter-spacing:0.08em; padding:0.12rem 0.35rem; border-radius:4px; text-transform:uppercase; background:#fff3cd; color:#92680a; border:1px solid #f0c94a; margin-left:0.3rem; vertical-align:middle; }
+  .empty-state { text-align:center; padding:3rem 2rem; color:var(--text-light); }
+  .empty-state .icon { font-size:2rem; margin-bottom:0.8rem; }
+  .empty-state p { font-size:0.85rem; line-height:1.5; }
+
+  /* TOAST */
+  .toast { position:fixed; bottom:2rem; right:2rem; background:var(--navy); color:var(--white); border-radius:12px; padding:1rem 1.4rem; display:flex; align-items:center; gap:0.8rem; font-size:0.85rem; font-weight:500; box-shadow:var(--shadow-lg); border:1px solid rgba(201,168,76,0.3); transform:translateY(100px); opacity:0; transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1); z-index:900; min-width:260px; }
+  .toast.show { transform:translateY(0); opacity:1; }
+  #toastSpend { bottom: 6.2rem; }
+  .toast-icon { font-size:1.2rem; }
+  .toast-amount { color:var(--gold-light); font-family:'DM Mono',monospace; }
+
+  /* MODAL */
+  .modal-overlay { position:fixed; inset:0; background:rgba(7,16,32,0.80); backdrop-filter:blur(6px); z-index:800; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.3s; }
+  .modal-overlay.open { opacity:1; pointer-events:all; }
+  .modal { background:var(--white); border-radius:22px; width:90%; max-width:460px; box-shadow:0 40px 100px rgba(7,16,32,0.5); overflow:hidden; transform:scale(0.88) translateY(24px); transition:transform 0.45s cubic-bezier(0.34,1.56,0.64,1); }
+  .modal-overlay.open .modal { transform:scale(1) translateY(0); }
+
+  .modal-header { background:linear-gradient(135deg,var(--navy) 0%,var(--navy-light) 100%); padding:2.2rem 2rem 1.8rem; text-align:center; position:relative; overflow:hidden; }
+  .modal-header::before { content:''; position:absolute; top:-60px; right:-60px; width:200px; height:200px; background:radial-gradient(circle,rgba(201,168,76,0.18) 0%,transparent 70%); border-radius:50%; }
+  .modal-header::after { content:''; position:absolute; bottom:-50px; left:-30px; width:160px; height:160px; background:radial-gradient(circle,rgba(201,168,76,0.1) 0%,transparent 70%); border-radius:50%; }
+  .confetti-wrap { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+  .confetti-piece { position:absolute; top:-10px; border-radius:2px; animation:confettiFall linear forwards; }
+  @keyframes confettiFall { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(130px) rotate(400deg);opacity:0} }
+
+  .modal-offer-icon { font-size:3.2rem; display:block; margin-bottom:0.8rem; animation:bounceIn 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.15s both; position:relative; z-index:1; }
+  @keyframes bounceIn { from{transform:scale(0) rotate(-15deg)} to{transform:scale(1) rotate(0)} }
+  .modal-eyebrow { font-size:0.68rem; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:0.4rem; position:relative; z-index:1; }
+  .modal-title { font-family:'Playfair Display',serif; font-size:1.65rem; font-weight:700; color:var(--white); line-height:1.2; position:relative; z-index:1; }
+
+  .modal-body { padding:1.8rem 2rem 2rem; }
+  .offer-highlight { background:linear-gradient(135deg,#fffbf0,var(--gold-pale)); border:1.5px solid rgba(201,168,76,0.4); border-radius:14px; padding:1.3rem 1.4rem; margin-bottom:1.4rem; text-align:center; }
+  .offer-highlight .big-val { font-family:'Playfair Display',serif; font-size:2.3rem; font-weight:700; color:var(--navy); letter-spacing:-0.02em; line-height:1; margin-bottom:0.3rem; }
+  .offer-highlight .big-sub { font-size:0.78rem; color:var(--text-mid); font-weight:500; }
+  .offer-desc { font-size:0.85rem; color:var(--text-mid); line-height:1.7; margin-bottom:1.2rem; text-align:center; }
+  .offer-desc strong { color:var(--text-dark); }
+  .offer-terms { font-size:0.67rem; color:var(--text-light); text-align:center; line-height:1.5; margin-bottom:1.4rem; padding:0 0.5rem; }
+
+  .btn-accept { width:100%; height:52px; background:linear-gradient(135deg,#1a7a4a,#1e6b4a); color:var(--white); border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:0.88rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; transition:all 0.25s; margin-bottom:0.6rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; }
+  .btn-accept:hover { transform:translateY(-1px); box-shadow:0 8px 24px rgba(30,107,74,0.35); }
+  .btn-decline { width:100%; background:none; border:none; font-size:0.78rem; color:var(--text-light); cursor:pointer; padding:0.4rem; transition:color 0.2s; }
+  .btn-decline:hover { color:var(--text-mid); }
+
+  .sidebar { display:flex; flex-direction:column; gap:1.5rem; }
+  .stats-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  .stat-mini { background:var(--white); border-radius:12px; border:1px solid var(--border); padding:1.2rem 1.1rem; box-shadow:var(--shadow-sm); }
+  .stat-mini .label { font-size:0.68rem; font-weight:600; letter-spacing:0.1em; color:var(--text-light); text-transform:uppercase; margin-bottom:0.4rem; }
+  .stat-mini .val { font-family:'Playfair Display',serif; font-size:1.35rem; font-weight:700; color:var(--text-dark); }
+  .stat-mini .val.gold { color:var(--gold); }
+  .stat-mini .change { font-size:0.7rem; color:var(--success); font-weight:500; margin-top:0.2rem; }
+  /* CURRENCY TOGGLE */
+  .currency-toggle { display:flex; align-items:center; gap:0; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); border-radius:8px; overflow:hidden; }
+  .currency-toggle button { background:none; border:none; color:rgba(255,255,255,0.5); font-family:'DM Mono',monospace; font-size:0.78rem; font-weight:600; letter-spacing:0.06em; padding:0.38rem 0.75rem; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+  .currency-toggle button.active { background:var(--gold); color:var(--navy); }
+  .currency-toggle button:hover:not(.active) { color:var(--white); background:rgba(255,255,255,0.1); }
+
+  /* SPEND CARD */
+  .spend-input-wrap { display:flex; align-items:center; border:1.5px solid #f0d0d0; border-radius:10px; overflow:hidden; background:#fff8f8; transition:border-color 0.2s,box-shadow 0.2s; }
+  .spend-input-wrap:focus-within { border-color:#c0392b; box-shadow:0 0 0 3px rgba(192,57,43,0.12); background:var(--white); }
+  .spend-prefix { padding:0 1rem; font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:600; color:#c0392b; border-right:1.5px solid #f0d0d0; background:#fdf0ef; height:52px; display:flex; align-items:center; user-select:none; }
+  .spend-input { flex:1; border:none; background:transparent; font-family:'DM Mono',monospace; font-size:1.2rem; font-weight:500; color:var(--text-dark); padding:0 1rem; height:52px; outline:none; letter-spacing:0.05em; }
+  .spend-input::placeholder { color:#dbb5b5; }
+  .btn-spend { width:100%; height:50px; background:linear-gradient(135deg,#922b21,#c0392b); color:var(--white); border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:0.88rem; font-weight:700; letter-spacing:0.06em; cursor:pointer; transition:all 0.25s; display:flex; align-items:center; justify-content:center; gap:0.5rem; text-transform:uppercase; margin-top:1rem; }
+  .btn-spend:hover { transform:translateY(-1px); box-shadow:0 8px 24px rgba(192,57,43,0.35); }
+  .btn-spend:active { transform:translateY(0); }
+  .btn-spend:disabled { opacity:0.45; cursor:not-allowed; transform:none; box-shadow:none; }
+  .spend-balance-note { font-size:0.72rem; color:var(--text-light); margin-top:0.7rem; text-align:center; }
+  .spend-balance-note strong { color:var(--text-dark); font-family:'DM Mono',monospace; }
+  .spend-err { font-size:0.75rem; color:#c0392b; margin-top:0.5rem; text-align:center; display:none; font-weight:500; }
+  .spend-err.show { display:block; animation:rowIn 0.2s ease; }
+  .tx-spend-icon { background:#fde8e8; }
+  .tx-amount-spent { font-family:'DM Mono',monospace; font-weight:600; color:#c0392b; font-size:0.88rem; }
+  .toast-spend { border-color:rgba(192,57,43,0.4); }
+  .toast-spend-amt { color:#f1948a; font-family:'DM Mono',monospace; }
+
+  .info-card { background:linear-gradient(135deg,var(--navy) 0%,var(--navy-light) 100%); border-radius:16px; padding:1.8rem; position:relative; overflow:hidden; }
+  .info-card::before { content:''; position:absolute; top:-40px; right:-40px; width:150px; height:150px; background:radial-gradient(circle,rgba(201,168,76,0.15) 0%,transparent 70%); border-radius:50%; }
+  .info-card h3 { font-family:'Playfair Display',serif; font-size:1rem; font-weight:600; color:var(--white); margin-bottom:0.5rem; }
+  .info-card p { font-size:0.8rem; color:rgba(255,255,255,0.55); line-height:1.6; margin-bottom:1.2rem; }
+  .rate-badge { display:inline-flex; align-items:center; gap:0.4rem; background:rgba(201,168,76,0.2); border:1px solid rgba(201,168,76,0.35); color:var(--gold-light); border-radius:8px; padding:0.4rem 0.8rem; font-size:0.78rem; font-weight:600; font-family:'DM Mono',monospace; }
+
+  footer { background:var(--navy); padding:1.5rem 2.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; }
+  footer .left { font-size:0.72rem; color:rgba(255,255,255,0.3); line-height:1.5; }
+  footer .links { display:flex; gap:1.5rem; }
+  footer .links a { font-size:0.72rem; color:rgba(255,255,255,0.35); text-decoration:none; letter-spacing:0.04em; transition:color 0.2s; }
+  footer .links a:hover { color:var(--gold); }
+
+  @media(max-width:820px){ .page{grid-template-columns:1fr;} .hero-title{font-size:1.8rem;} .savings-total{font-size:2.4rem;} header{padding:0 1.2rem;} nav{display:none;} }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span><span class="dot"></span> Secure Session Active</span>
+  <span>Member FDIC &nbsp;|&nbsp; 256-bit SSL Encryption &nbsp;|&nbsp; Last login: Today</span>
+</div>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">NV</div>
+    <div class="logo-text">North<span>Vault</span></div>
+  </div>
+  <nav>
+    <a href="#" class="active">Dashboard</a>
+    <a href="#">Accounts</a>
+    <a href="#">Transfer</a>
+    <a href="#">Statements</a>
+    <a href="#">Support</a>
+  </nav>
+  <div class="header-right">
+    <div class="currency-toggle">
+      <button id="btnUSD" class="active" onclick="setCurrency('USD')">🇺🇸 USD</button>
+      <button id="btnJPY" onclick="setCurrency('JPY')">🇯🇵 JPY</button>
+    </div>
+    <div>
+      <div style="font-size:0.8rem;font-weight:600;color:#fff;">Alex Morgan</div>
+      <div class="acct-num">****-****-7821</div>
+    </div>
+    <div class="avatar">AM</div>
+  </div>
+</header>
+
+<!-- ACTIVE PROMO BANNER -->
+<div class="promo-banner" id="promoBanner">
+  <div class="promo-banner-left">
+    <div class="promo-pip"></div>
+    <div class="promo-banner-text" id="promoBannerText"></div>
+  </div>
+  <div class="promo-banner-tag" id="promoBannerTag"></div>
+</div>
+
+<div class="hero-band">
+  <div class="hero-inner">
+    <div class="hero-label">Personal Savings Account</div>
+    <h1 class="hero-title">Your Wealth, <em>Growing Daily</em></h1>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="label">Total Saved</div>
+        <div class="value gold" id="hero-total">$0.00</div>
+        <div class="sub">All-time accumulated</div>
+      </div>
+      <div class="hero-stat">
+        <div class="label">Deposits Made</div>
+        <div class="value" id="hero-count">0</div>
+        <div class="sub">Transactions processed</div>
+      </div>
+      <div class="hero-stat">
+        <div class="label">Avg. Savings Rate</div>
+        <div class="value" id="hero-rate">—</div>
+        <div class="sub">10–40% variable APY</div>
+      </div>
+      <div class="hero-stat">
+        <div class="label">Promo Bonuses</div>
+        <div class="value gold" id="hero-bonus">$0.00</div>
+        <div class="sub">From special offers</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <div style="display:flex;flex-direction:column;gap:1.5rem;">
+
+    <div class="card">
+      <div class="card-header">
+        <h2>New Deposit</h2>
+        <span class="badge badge-gold" id="depositBadge">Auto-Save Enabled</span>
+      </div>
+      <div class="card-body">
+        <div class="input-group">
+          <label class="input-label">Deposit Amount</label>
+          <div class="input-wrap">
+            <div class="input-prefix" id="depositPrefix">$</div>
+            <input type="number" class="amount-input" id="amountInput" placeholder="0.00" min="0.01" step="0.01">
+          </div>
+        </div>
+        <div class="rate-preview" id="ratePreview">
+          <div class="rate-icon" id="rateIcon">✦</div>
+          <div class="rate-text" id="rateText">
+            <strong>NorthVault Auto-Save™</strong> — A random portion between
+            <strong>10%–40%</strong> of your deposit is swept into your vault each transaction.
+          </div>
+        </div>
+        <button class="btn-deposit" onclick="makeDeposit()">⟶ &nbsp; Process Deposit</button>
+        <p class="disclaimer">By depositing, you agree to our <a href="#">Auto-Save Terms</a>. Funds are FDIC insured up to $250,000. &copy; 2026 NorthVault Financial, N.A.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Transaction History</h2>
+        <span class="badge badge-green" id="tx-count-badge">0 Transactions</span>
+      </div>
+      <table class="activity-table">
+        <thead>
+          <tr>
+            <th>Transaction</th>
+            <th>Deposited</th>
+            <th>Amount Saved</th>
+          </tr>
+        </thead>
+        <tbody id="txBody">
+          <tr id="emptyRow">
+            <td colspan="3">
+              <div class="empty-state">
+                <div class="icon">🏦</div>
+                <p>No transactions yet.<br>Make your first deposit to get started.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="card">
+      <div class="card-header">
+        <h2>Savings Balance</h2>
+        <span class="badge badge-gold">Protected</span>
+      </div>
+      <div class="savings-display">
+        <div class="savings-label">Total Accumulated Savings</div>
+        <div class="savings-total" id="savingsTotal">$0.00</div>
+      </div>
+      <div class="savings-progress-wrap">
+        <div class="progress-labels">
+          <span>Progress to $1,000</span>
+          <span id="progressPct">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressBar"></div>
+        </div>
+      </div>
+      <div class="deposits-count">
+        <strong id="countDisplay">0</strong> deposits &nbsp;·&nbsp; Avg rate: <strong id="avgRateDisplay">—</strong>
+      </div>
+    </div>
+
+    <!-- SPEND FROM VAULT CARD -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Spend from Vault</h2>
+        <span class="badge" style="background:#fde8e8;color:#922b21;">Record Spend</span>
+      </div>
+      <div class="card-body" style="padding:1.4rem 1.8rem;">
+        <div class="input-group" style="margin-bottom:0;">
+          <label class="input-label">Amount Spent</label>
+          <div class="spend-input-wrap">
+            <div class="spend-prefix" id="spendPrefix">$</div>
+            <input type="number" class="spend-input" id="spendInput" placeholder="0.00" min="0.01" step="0.01">
+          </div>
+          <div class="spend-err" id="spendErr">Insufficient vault balance.</div>
+        </div>
+        <button class="btn-spend" id="btnSpend" onclick="makeSpend()">↓ &nbsp; Record as Spent</button>
+        <div class="spend-balance-note">Available: <strong id="spendAvail">$0.00</strong></div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-mini">
+        <div class="label">Largest Save</div>
+        <div class="val gold" id="largestSave">$0.00</div>
+        <div class="change">↑ Best deposit</div>
+      </div>
+      <div class="stat-mini">
+        <div class="label">Last Rate</div>
+        <div class="val" id="lastRate">—</div>
+        <div class="change">Auto-selected</div>
+      </div>
+      <div class="stat-mini">
+        <div class="label">Total In</div>
+        <div class="val" id="totalIn">$0.00</div>
+        <div class="change">All deposits</div>
+      </div>
+      <div class="stat-mini">
+        <div class="label">Promo Bonus</div>
+        <div class="val gold" id="bonusStat">$0.00</div>
+        <div class="change">↑ Rewards earned</div>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <h3>Special Offers</h3>
+      <p>Every deposit has a ~10% chance of triggering an exclusive promo — a Rate Lock at up to 65%, or a Vault Penny Drop adding $0.25–$1.00 per deposit. Watch for the pop-up!</p>
+      <div class="rate-badge">⭐ &nbsp; Rare · ~10% Chance</div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-icon">✔</span>
+  <div>Deposit processed — <span class="toast-amount" id="toastAmt">$0.00</span> saved!</div>
+</div>
+
+<!-- SPEND TOAST -->
+<div class="toast toast-spend" id="toastSpend">
+  <span class="toast-icon">🛍️</span>
+  <div>Spent <span class="toast-spend-amt" id="toastSpendAmt">$0.00</span> recorded from vault.</div>
+</div>
+
+<!-- SPECIAL OFFER MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="confetti-wrap" id="confettiWrap"></div>
+      <span class="modal-offer-icon" id="modalIcon">🎉</span>
+      <div class="modal-eyebrow" id="modalEyebrow">Special Offer Unlocked</div>
+      <div class="modal-title" id="modalTitle">You've Earned a Reward</div>
+    </div>
+    <div class="modal-body">
+      <div class="offer-highlight">
+        <div class="big-val" id="modalBigVal">—</div>
+        <div class="big-sub" id="modalBigSub">—</div>
+      </div>
+      <div class="offer-desc" id="modalDesc"></div>
+      <div class="offer-terms" id="modalTerms"></div>
+      <button class="btn-accept" id="btnAccept" onclick="acceptOffer()">✔ &nbsp; Activate This Offer</button>
+      <button class="btn-decline" onclick="declineOffer()">No thanks, skip this offer</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="left">NorthVault Financial, N.A. &nbsp;|&nbsp; Member FDIC &nbsp;|&nbsp; Equal Housing Lender<br>&copy; 2026 NorthVault Corp. All rights reserved. &nbsp;|&nbsp; Routing No. 021000021</div>
+  <div class="links">
+    <a href="#">Privacy Policy</a>
+    <a href="#">Terms of Use</a>
+    <a href="#">Security</a>
+    <a href="#">Contact Us</a>
+  </div>
+</footer>
+
+<script>
+  // ── STATE ──
+  let totalSaved = 0, totalDeposited = 0, depositCount = 0;
+  let ratesUsed = [], largestSave = 0, totalBonus = 0;
+  const GOAL = 1000;
+
+  // Active promos
+  let activeLock = null;   // { rate, remaining }
+  let activePenny = null;  // { remaining }
+  let pendingOffer = null; // offer waiting for accept/decline
+
+  // ── HELPERS ──
+  const fmt = n => n.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+  const pct = r => (r * 100).toFixed(1) + '%';
+  const rand = (a, b) => Math.random() * (b - a) + a;
+  const randInt = (a, b) => Math.floor(rand(a, b + 1));
+
+  // ── MAKE DEPOSIT ──
+  function makeDeposit() {
+    const inp = document.getElementById('amountInput');
+    const rawAmount = parseFloat(inp.value);
+    if (!rawAmount || rawAmount <= 0) {
+      inp.style.boxShadow = '0 0 0 3px rgba(220,60,60,0.25)';
+      setTimeout(() => inp.style.boxShadow = '', 900);
+      inp.focus(); return;
+    }
+
+    // Normalise to USD for internal storage
+    const amount = showJPY ? rawAmount / USD_TO_JPY : rawAmount;
+
+    // Determine savings rate
+    let rate, isLocked = false;
+    if (activeLock && activeLock.remaining > 0) {
+      rate = activeLock.rate;
+      isLocked = true;
+      activeLock.remaining--;
+      if (activeLock.remaining <= 0) activeLock = null;
+    } else {
+      rate = rand(0.10, 0.40);
+    }
+
+    const saved = amount * rate;
+
+    // Penny bonus (always stored as USD internally)
+    let penny = 0;
+    if (activePenny && activePenny.remaining > 0) {
+      penny = showJPY ? rand(37, 150) / USD_TO_JPY : rand(0.25, 1.00);
+      activePenny.remaining--;
+      if (activePenny.remaining <= 0) activePenny = null;
+    }
+
+    // Accumulate
+    totalSaved += saved + penny;
+    totalBonus += penny;
+    totalDeposited += amount;
+    depositCount++;
+    ratesUsed.push(rate);
+    if (saved > largestSave) largestSave = saved;
+
+    refreshUI(amount, saved, rate, isLocked, penny);
+    inp.value = ''; inp.focus();
+    showToast(saved + penny);
+    updateBanner();
+    updateRatePreview();
+
+    // ~10% offer chance — only if no active promo
+    if (!activeLock && !activePenny && Math.random() < 0.10) {
+      setTimeout(showOfferModal, 900);
+    }
+  }
+
+  // ── REFRESH UI ──
+  function refreshUI(amount, saved, rate, isLocked, penny) {
+    document.getElementById('hero-total').textContent = money(totalSaved);
+    document.getElementById('hero-count').textContent = depositCount;
+    document.getElementById('hero-bonus').textContent = money(totalBonus);
+    const avg = ratesUsed.reduce((a,b) => a+b, 0) / ratesUsed.length;
+    document.getElementById('hero-rate').textContent = pct(avg);
+
+    document.getElementById('savingsTotal').textContent = money(totalSaved);
+
+    const prog = Math.min((totalSaved / GOAL) * 100, 100);
+    document.getElementById('progressBar').style.width = prog + '%';
+    document.getElementById('progressPct').textContent = prog.toFixed(1) + '%';
+    document.getElementById('countDisplay').textContent = depositCount;
+    document.getElementById('avgRateDisplay').textContent = pct(avg);
+    document.getElementById('largestSave').textContent = money(largestSave);
+    document.getElementById('lastRate').textContent = pct(rate);
+    document.getElementById('totalIn').textContent = money(totalDeposited);
+    document.getElementById('bonusStat').textContent = money(totalBonus);
+    document.getElementById('tx-count-badge').textContent = depositCount + ' Transaction' + (depositCount !== 1 ? 's' : '');
+
+    updateSpendAvail();
+    addRow(amount, saved, rate, isLocked, penny);
+  }
+
+  // ── ADD TABLE ROW ──
+  function addRow(amount, saved, rate, isLocked, penny) {
+    const tbody = document.getElementById('txBody');
+    const empty = document.getElementById('emptyRow');
+    if (empty) empty.remove();
+
+    const now = new Date();
+    const ds = now.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    const ts = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+    const lockBadge = isLocked ? `<span class="lock-badge">🔒 Rate Lock</span>` : '';
+
+    // Main deposit row
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><div class="tx-info">
+        <span class="tx-icon tx-deposit-icon">💰</span>
+        <div>
+          <span class="tx-name">Auto-Save Deposit #${depositCount} ${lockBadge}</span>
+          <span class="tx-sub">${ds} · ${ts}</span>
+        </div>
+      </div></td>
+      <td>
+        <div class="tx-original">${money(amount)}</div>
+        <div class="tx-rate-note">${pct(rate)} sweep rate</div>
+      </td>
+      <td>
+        <div class="tx-amount-saved">+ ${money(saved)}</div>
+        ${penny > 0 ? `<div class="tx-rate-note" style="color:#b8860b;">+ ${money(penny)} bonus</div>` : ''}
+      </td>`;
+    tbody.insertBefore(tr, tbody.firstChild);
+
+    // Penny bonus row (separate for clarity)
+    if (penny > 0) {
+      const btr = document.createElement('tr');
+      btr.innerHTML = `
+        <td><div class="tx-info">
+          <span class="tx-icon tx-promo-icon">⭐</span>
+          <div>
+            <span class="tx-name">Vault Penny Drop Reward</span>
+            <span class="tx-sub">${ds} · ${ts} · Promo Applied</span>
+          </div>
+        </div></td>
+        <td><div class="tx-original" style="color:#b8860b;">Promo</div></td>
+        <td><div class="tx-amount-promo">+ ${money(penny)}</div></td>`;
+      tbody.insertBefore(btr, tbody.firstChild);
+    }
+  }
+
+  // ── BANNER ──
+  function updateBanner() {
+    const banner = document.getElementById('promoBanner');
+    const txt = document.getElementById('promoBannerText');
+    const tag = document.getElementById('promoBannerTag');
+
+    if (activeLock && activeLock.remaining > 0) {
+      banner.classList.add('active');
+      txt.innerHTML = `🔒 <strong>Rate Lock Active</strong> — <strong>${activeLock.remaining}</strong> deposit${activeLock.remaining !== 1 ? 's' : ''} remaining at boosted <strong>${pct(activeLock.rate)}</strong>`;
+      tag.textContent = activeLock.remaining + ' left';
+    } else if (activePenny && activePenny.remaining > 0) {
+      banner.classList.add('active');
+      txt.innerHTML = `💰 <strong>Vault Penny Drop Active</strong> — <strong>${activePenny.remaining}</strong> deposit${activePenny.remaining !== 1 ? 's' : ''} remaining with ${showJPY ? '¥37–¥150' : '$0.25–$1.00'} bonus sweep`;
+      tag.textContent = activePenny.remaining + ' left';
+    } else {
+      banner.classList.remove('active');
+    }
+  }
+
+  // ── RATE PREVIEW BOX ──
+  function updateRatePreview() {
+    const box = document.getElementById('ratePreview');
+    const icon = document.getElementById('rateIcon');
+    const txt = document.getElementById('rateText');
+    const badge = document.getElementById('depositBadge');
+
+    if (activeLock && activeLock.remaining > 0) {
+      box.style.background = 'linear-gradient(135deg, #fffbf0, #fff3cd)';
+      box.style.borderColor = 'rgba(201,168,76,0.5)';
+      icon.textContent = '🔒';
+      txt.innerHTML = `<strong>Rate Lock Active!</strong> Your next <strong>${activeLock.remaining}</strong> deposit${activeLock.remaining !== 1 ? 's' : ''} will save at a guaranteed <strong>${pct(activeLock.rate)}</strong> — boosted above the normal 10–40% range.`;
+      badge.textContent = '🔒 Rate Lock Active';
+      badge.style.background = '#fff3cd';
+      badge.style.color = '#92680a';
+    } else if (activePenny && activePenny.remaining > 0) {
+      box.style.background = 'linear-gradient(135deg, #f0fff8, #d4efe3)';
+      box.style.borderColor = 'rgba(30,107,74,0.3)';
+      icon.textContent = '💰';
+      txt.innerHTML = `<strong>Penny Drop Active!</strong> Your next <strong>${activePenny.remaining}</strong> deposit${activePenny.remaining !== 1 ? 's' : ''} will receive an extra <strong>${showJPY ? '¥37–¥150' : '$0.25–$1.00'}</strong> bonus added directly to your vault.`;
+      badge.textContent = '💰 Penny Drop Active';
+      badge.style.background = '#d4efe3';
+      badge.style.color = '#1e6b4a';
+    } else {
+      box.style.background = 'linear-gradient(135deg, #f0f4fa, #e8edf7)';
+      box.style.borderColor = '#dde5f0';
+      icon.textContent = '✦';
+      txt.innerHTML = `<strong>NorthVault Auto-Save™</strong> — A random portion between <strong>10%–40%</strong> of your deposit is swept into your protected vault each transaction.`;
+      badge.textContent = 'Auto-Save Enabled';
+      badge.style.background = '';
+      badge.style.color = '';
+    }
+  }
+
+  // ── TOAST ──
+  let toastTimer;
+  function showToast(total) {
+    document.getElementById('toastAmt').textContent = money(total);
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+  }
+
+  // ── SPEND ──
+  let totalSpent = 0;
+  let spendCount = 0;
+  let spendToastTimer;
+
+  function makeSpend() {
+    const inp = document.getElementById('spendInput');
+    const err = document.getElementById('spendErr');
+    const rawAmount = parseFloat(inp.value);
+
+    err.classList.remove('show');
+
+    if (!rawAmount || rawAmount <= 0) {
+      inp.style.boxShadow = '0 0 0 3px rgba(192,57,43,0.2)';
+      setTimeout(() => inp.style.boxShadow = '', 900);
+      inp.focus(); return;
+    }
+
+    // Normalise to USD for internal storage
+    const amount = showJPY ? rawAmount / USD_TO_JPY : rawAmount;
+
+    if (amount > totalSaved) {
+      err.textContent = `Insufficient funds. Vault balance is ${money(totalSaved)}.`;
+      err.classList.add('show');
+      inp.style.boxShadow = '0 0 0 3px rgba(192,57,43,0.2)';
+      setTimeout(() => inp.style.boxShadow = '', 900);
+      return;
+    }
+
+    totalSaved -= amount;
+    totalSpent += amount;
+    spendCount++;
+
+    // Update balance display
+    document.getElementById('savingsTotal').textContent = money(totalSaved);
+    document.getElementById('hero-total').textContent = money(totalSaved);
+
+    const prog = Math.min((totalSaved / GOAL) * 100, 100);
+    document.getElementById('progressBar').style.width = prog + '%';
+    document.getElementById('progressPct').textContent = prog.toFixed(1) + '%';
+
+    updateSpendAvail();
+    addSpendRow(amount);
+    inp.value = '';
+    inp.focus();
+    showSpendToast(amount);
+  }
+
+  function updateSpendAvail() {
+    document.getElementById('spendAvail').textContent = money(totalSaved);
+  }
+
+  function addSpendRow(amount) {
+    const tbody = document.getElementById('txBody');
+    const empty = document.getElementById('emptyRow');
+    if (empty) empty.remove();
+
+    const now = new Date();
+    const ds = now.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    const ts = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><div class="tx-info">
+        <span class="tx-icon tx-spend-icon">🛍️</span>
+        <div>
+          <span class="tx-name">Vault Withdrawal #${spendCount}</span>
+          <span class="tx-sub">${ds} · ${ts} · Spent</span>
+        </div>
+      </div></td>
+      <td>
+        <div class="tx-original" style="color:#c0392b;">Spend</div>
+        <div class="tx-rate-note">From vault</div>
+      </td>
+      <td>
+        <div class="tx-amount-spent">− ${money(amount)}</div>
+        <div class="tx-rate-note" style="color:#c0392b;">Deducted</div>
+      </td>`;
+    tbody.insertBefore(tr, tbody.firstChild);
+  }
+
+  function showSpendToast(amount) {
+    document.getElementById('toastSpendAmt').textContent = money(amount);
+    const t = document.getElementById('toastSpend');
+    t.classList.add('show');
+    clearTimeout(spendToastTimer);
+    spendToastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+  }
+
+  document.getElementById('spendInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') makeSpend();
+  });
+
+  // ── OFFER MODAL ──
+  const OFFER_TYPES = [
+    {
+      id: 'ratelock',
+      icon: '🔒',
+      eyebrow: 'Exclusive Rate Offer',
+      title: 'Rate Lock Activated!',
+      build(d) {
+        return {
+          bigVal: pct(d.rate),
+          bigSub: 'Guaranteed Boosted Savings Rate',
+          desc: `You've unlocked a <strong>Rate Lock</strong> — your next <strong>${d.count}</strong> deposit${d.count !== 1 ? 's' : ''} will automatically save at a locked rate of <strong>${pct(d.rate)}</strong>. That's far above the standard 10–40% range. Your vault grows faster, guaranteed.`,
+          terms: `Offer locks savings rate at ${pct(d.rate)} for the next ${d.count} deposit${d.count !== 1 ? 's' : ''} only. Rate applies to sweep portion only. Cannot stack with another Rate Lock promo.`
+        };
+      },
+      generate: () => ({ rate: rand(0.42, 0.65), count: randInt(2, 5) }),
+      activate(d) { activeLock = { rate: d.rate, remaining: d.count }; }
+    },
+    {
+      id: 'pennydrop',
+      icon: '💰',
+      eyebrow: 'Vault Bonus Offer',
+      title: 'Penny Drop Promo!',
+      build(d) {
+        return {
+          bigVal: showJPY ? '¥37 – ¥150' : '$0.25 – $1.00',
+          bigSub: 'Random Bonus Per Deposit',
+          desc: `Congratulations — you've unlocked the <strong>Vault Penny Drop</strong>! For your next <strong>${d.count}</strong> deposit${d.count !== 1 ? 's' : ''}, we'll add a random bonus of <strong>${showJPY ? '¥37–¥150' : '$0.25–$1.00'}</strong> directly into your vault on top of your regular sweep. Every cent counts.`,
+          terms: `Bonus of ${showJPY ? '¥37–¥150' : '$0.25–$1.00'} randomly applied per deposit. Valid for your next ${d.count} deposit${d.count !== 1 ? 's' : ''} only. Bonus amounts vary each transaction.`
+        };
+      },
+      generate: () => ({ count: randInt(2, 5) }),
+      activate(d) { activePenny = { remaining: d.count }; }
+    }
+  ];
+
+  function showOfferModal() {
+    const tpl = OFFER_TYPES[Math.floor(Math.random() * OFFER_TYPES.length)];
+    const data = tpl.generate();
+    const built = tpl.build(data);
+    pendingOffer = { tpl, data };
+
+    document.getElementById('modalIcon').textContent = tpl.icon;
+    document.getElementById('modalEyebrow').textContent = tpl.eyebrow;
+    document.getElementById('modalTitle').textContent = tpl.title;
+    document.getElementById('modalBigVal').textContent = built.bigVal;
+    document.getElementById('modalBigSub').textContent = built.bigSub;
+    document.getElementById('modalDesc').innerHTML = built.desc;
+    document.getElementById('modalTerms').textContent = built.terms;
+
+    spawnConfetti();
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function acceptOffer() {
+    if (!pendingOffer) return;
+    pendingOffer.tpl.activate(pendingOffer.data);
+    pendingOffer = null;
+    document.getElementById('modalOverlay').classList.remove('open');
+    updateBanner();
+    updateRatePreview();
+  }
+
+  function declineOffer() {
+    pendingOffer = null;
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+
+  document.getElementById('modalOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modalOverlay')) declineOffer();
+  });
+
+  // ── CONFETTI ──
+  function spawnConfetti() {
+    const wrap = document.getElementById('confettiWrap');
+    wrap.innerHTML = '';
+    const cols = ['#c9a84c','#e8c97a','#2ecf8a','#4a9eff','#ff6b6b','#ffffff','#f5c842'];
+    for (let i = 0; i < 26; i++) {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      const size = rand(5, 11);
+      el.style.cssText = `left:${rand(4,96)}%;width:${size}px;height:${size}px;background:${cols[randInt(0,cols.length-1)]};border-radius:${Math.random()>0.5?'50%':'2px'};animation:confettiFall ${rand(0.65,1.35)}s ${rand(0,0.5)}s linear forwards;`;
+      wrap.appendChild(el);
+    }
+  }
+
+  // ── CURRENCY TOGGLE ──
+  const USD_TO_JPY = 149.50; // 1 USD = 149.50 JPY (as of March 29, 2026)
+  let showJPY = false;
+
+  function money(usd) {
+    if (showJPY) return '¥' + Math.round(usd * USD_TO_JPY).toLocaleString('ja-JP');
+    return '$' + fmt(usd);
+  }
+
+  function setCurrency(cur) {
+    showJPY = (cur === 'JPY');
+    document.getElementById('btnUSD').classList.toggle('active', !showJPY);
+    document.getElementById('btnJPY').classList.toggle('active', showJPY);
+
+    // Update input prefixes and placeholders
+    const sym = showJPY ? '¥' : '$';
+    const placeholder = showJPY ? '0' : '0.00';
+    const step = showJPY ? '1' : '0.01';
+    document.getElementById('depositPrefix').textContent = sym;
+    document.getElementById('spendPrefix').textContent = sym;
+    document.getElementById('amountInput').placeholder = placeholder;
+    document.getElementById('amountInput').step = step;
+    document.getElementById('spendInput').placeholder = placeholder;
+    document.getElementById('spendInput').step = step;
+
+    refreshAllDisplays();
+  }
+
+  function refreshAllDisplays() {
+    document.getElementById('hero-total').textContent = money(totalSaved);
+    document.getElementById('hero-bonus').textContent = money(totalBonus);
+    document.getElementById('savingsTotal').textContent = money(totalSaved);
+    document.getElementById('largestSave').textContent = money(largestSave);
+    document.getElementById('totalIn').textContent = money(totalDeposited);
+    document.getElementById('bonusStat').textContent = money(totalBonus);
+    updateSpendAvail();
+    // update progress goal label
+    const goal = showJPY ? '¥' + Math.round(GOAL * USD_TO_JPY).toLocaleString('ja-JP') : '$1,000';
+    document.querySelector('.progress-labels span:first-child').textContent = 'Progress to ' + goal;
+  }
+
+  // Enter key
+  document.getElementById('amountInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') makeDeposit();
+  });
+
+  updateRatePreview();
+</script>
+</body>
+</html>
