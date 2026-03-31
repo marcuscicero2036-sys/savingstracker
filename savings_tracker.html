@@ -468,12 +468,48 @@
   // ── STATE ──
   let totalSaved = 0, totalDeposited = 0, depositCount = 0;
   let ratesUsed = [], largestSave = 0, totalBonus = 0;
+  let totalSpent = 0, spendCount = 0;
   const GOAL = 1000;
 
   // Active promos
   let activeLock = null;   // { rate, remaining }
   let activePenny = null;  // { remaining }
   let pendingOffer = null; // offer waiting for accept/decline
+  let txLog = []; // full transaction history for persistence
+
+  // ── PERSISTENCE ──
+  const STORAGE_KEY = 'northvault_v1';
+
+  function saveState() {
+    const state = {
+      totalSaved, totalDeposited, depositCount,
+      ratesUsed, largestSave, totalBonus,
+      totalSpent, spendCount,
+      activeLock, activePenny,
+      showJPY, txLog
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      totalSaved     = s.totalSaved     ?? 0;
+      totalDeposited = s.totalDeposited ?? 0;
+      depositCount   = s.depositCount   ?? 0;
+      ratesUsed      = s.ratesUsed      ?? [];
+      largestSave    = s.largestSave    ?? 0;
+      totalBonus     = s.totalBonus     ?? 0;
+      totalSpent     = s.totalSpent     ?? 0;
+      spendCount     = s.spendCount     ?? 0;
+      activeLock     = s.activeLock     ?? null;
+      activePenny    = s.activePenny    ?? null;
+      showJPY        = s.showJPY        ?? false;
+      txLog          = s.txLog          ?? [];
+    } catch(e) { /* corrupted storage — start fresh */ }
+  }
 
   // ── HELPERS ──
   const fmt = n => n.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
@@ -524,6 +560,15 @@
     if (saved > largestSave) largestSave = saved;
 
     refreshUI(amount, saved, rate, isLocked, penny);
+
+    // Log + persist
+    const now = new Date();
+    txLog.unshift({ type:'deposit', amount, saved, rate, isLocked, penny,
+      ds: now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),
+      ts: now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),
+      count: depositCount });
+    saveState();
+
     inp.value = ''; inp.focus();
     showToast(saved + penny);
     updateBanner();
@@ -561,14 +606,14 @@
   }
 
   // ── ADD TABLE ROW ──
-  function addRow(amount, saved, rate, isLocked, penny) {
+  function addRow(amount, saved, rate, isLocked, penny, dsIn, tsIn, countIn) {
     const tbody = document.getElementById('txBody');
     const empty = document.getElementById('emptyRow');
     if (empty) empty.remove();
 
-    const now = new Date();
-    const ds = now.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-    const ts = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+    const ds = dsIn || new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    const ts = tsIn || new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+    const num = countIn || depositCount;
     const lockBadge = isLocked ? `<span class="lock-badge">🔒 Rate Lock</span>` : '';
 
     // Main deposit row
@@ -577,7 +622,7 @@
       <td><div class="tx-info">
         <span class="tx-icon tx-deposit-icon">💰</span>
         <div>
-          <span class="tx-name">Auto-Save Deposit #${depositCount} ${lockBadge}</span>
+          <span class="tx-name">Auto-Save Deposit #${num} ${lockBadge}</span>
           <span class="tx-sub">${ds} · ${ts}</span>
         </div>
       </div></td>
@@ -672,8 +717,6 @@
   }
 
   // ── SPEND ──
-  let totalSpent = 0;
-  let spendCount = 0;
   let spendToastTimer;
 
   function makeSpend() {
@@ -713,6 +756,13 @@
     document.getElementById('progressPct').textContent = prog.toFixed(1) + '%';
 
     updateSpendAvail();
+    // Log + persist
+    const nowS = new Date();
+    txLog.unshift({ type:'spend', amount,
+      ds: nowS.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),
+      ts: nowS.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),
+      count: spendCount });
+    saveState();
     addSpendRow(amount);
     inp.value = '';
     inp.focus();
@@ -723,21 +773,21 @@
     document.getElementById('spendAvail').textContent = money(totalSaved);
   }
 
-  function addSpendRow(amount) {
+  function addSpendRow(amount, dsIn, tsIn, countIn) {
     const tbody = document.getElementById('txBody');
     const empty = document.getElementById('emptyRow');
     if (empty) empty.remove();
 
-    const now = new Date();
-    const ds = now.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-    const ts = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+    const ds = dsIn || new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    const ts = tsIn || new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+    const num = countIn || spendCount;
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><div class="tx-info">
         <span class="tx-icon tx-spend-icon">🛍️</span>
         <div>
-          <span class="tx-name">Vault Withdrawal #${spendCount}</span>
+          <span class="tx-name">Vault Withdrawal #${num}</span>
           <span class="tx-sub">${ds} · ${ts} · Spent</span>
         </div>
       </div></td>
@@ -759,10 +809,6 @@
     clearTimeout(spendToastTimer);
     spendToastTimer = setTimeout(() => t.classList.remove('show'), 3200);
   }
-
-  document.getElementById('spendInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') makeSpend();
-  });
 
   // ── OFFER MODAL ──
   const OFFER_TYPES = [
@@ -825,6 +871,7 @@
     document.getElementById('modalOverlay').classList.remove('open');
     updateBanner();
     updateRatePreview();
+    saveState();
   }
 
   function declineOffer() {
@@ -891,12 +938,65 @@
     document.querySelector('.progress-labels span:first-child').textContent = 'Progress to ' + goal;
   }
 
+  // ── REPLAY HISTORY FROM STORAGE ──
+  function replayHistory() {
+    if (txLog.length === 0) return;
+    const tbody = document.getElementById('txBody');
+    const empty = document.getElementById('emptyRow');
+    if (empty) empty.remove();
+
+    // txLog is newest-first; render in order (already in correct order for insertBefore)
+    txLog.forEach(tx => {
+      if (tx.type === 'deposit') {
+        addRow(tx.amount, tx.saved, tx.rate, tx.isLocked, tx.penny, tx.ds, tx.ts, tx.count);
+      } else if (tx.type === 'spend') {
+        addSpendRow(tx.amount, tx.ds, tx.ts, tx.count);
+      }
+    });
+  }
+
+  // ── INIT ──
+  loadState();
+
+  // Restore currency toggle UI
+  document.getElementById('btnUSD').classList.toggle('active', !showJPY);
+  document.getElementById('btnJPY').classList.toggle('active', showJPY);
+  if (showJPY) {
+    const sym = '¥'; const placeholder = '0'; const step = '1';
+    document.getElementById('depositPrefix').textContent = sym;
+    document.getElementById('spendPrefix').textContent = sym;
+    document.getElementById('amountInput').placeholder = placeholder;
+    document.getElementById('amountInput').step = step;
+    document.getElementById('spendInput').placeholder = placeholder;
+    document.getElementById('spendInput').step = step;
+  }
+
+  // Restore hero count
+  document.getElementById('hero-count').textContent = depositCount;
+  document.getElementById('countDisplay').textContent = depositCount;
+  document.getElementById('tx-count-badge').textContent = depositCount + ' Transaction' + (depositCount !== 1 ? 's' : '');
+  if (ratesUsed.length > 0) {
+    const avg = ratesUsed.reduce((a,b) => a+b, 0) / ratesUsed.length;
+    document.getElementById('hero-rate').textContent = pct(avg);
+    document.getElementById('avgRateDisplay').textContent = pct(avg);
+    document.getElementById('lastRate').textContent = pct(ratesUsed[ratesUsed.length - 1]);
+  }
+  const prog = Math.min((totalSaved / GOAL) * 100, 100);
+  document.getElementById('progressBar').style.width = prog + '%';
+  document.getElementById('progressPct').textContent = prog.toFixed(1) + '%';
+
+  refreshAllDisplays();
+  updateBanner();
+  updateRatePreview();
+  replayHistory();
+
   // Enter key
   document.getElementById('amountInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') makeDeposit();
   });
-
-  updateRatePreview();
+  document.getElementById('spendInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') makeSpend();
+  });
 </script>
 </body>
 </html>
